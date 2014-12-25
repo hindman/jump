@@ -1,0 +1,15 @@
+# Exclude all by extension.
+*.pyc
+.DS_Store
+
+# Exclude specific files at the top level.
+/.ackrc
+/.noseids
+/.python-version
+/.coverage
+/tags
+
+# Exclude specific dirs at the top level.
+/tmp/
+/dist/
+

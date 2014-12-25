@@ -1,0 +1,48 @@
+NAME
+
+    namepath - Associate a frequently used path with a short name
+    j        - Jump to a named path (cd to it)
+    e        - Echo a named path
+
+SYNOPSIS
+
+    namepath
+    namepath --add NAME PATH
+    namepath --rm NAME
+    namepath --mv OLD_NAME NEW_NAME
+    namepath --help
+
+    j NAME
+    e NAME
+
+DESCRIPTION
+
+    The namepath utility can be used to assign convenient names to frequently
+    used paths.
+
+    The related j and e commands can then be used to cd to a named path or to
+    echo a named path (the latter when constructing larger shell commands via
+    command interpolation).
+
+    A simple example:
+
+        namepath docs $HOME/my/favorite/docs
+        namepath words /usr/share/dict/words
+
+        j docs
+        grep ^aa `e words` > words_starting_with_aa
+
+    Named paths are stored in $HOME/.namepathrc.
+
+INSTALLATION
+
+    Download the namepath script to a directory in your PATH and make it
+    executable.
+
+    Add the following commands to your Bash profile (adjust the value assigned
+    to NAME_SCRIPT as needed):
+
+        NAME_SCRIPT="$HOME/bin/namepath"
+        function j { cd $("$NAME_SCRIPT" "$1") }
+        function e { "$NAME_SCRIPT" "$1" }
+
