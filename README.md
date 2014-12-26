@@ -3,19 +3,19 @@
 The `nameit` utility can be used to assign convenient names to frequently used
 strings, typically paths.
 
-The related `j` shell command can then be used to cd to a named path (`j` for
+The related `j` shell command can then be used to `cd` to a named path (`j` for
 jump). The `ni` shell command can be used to echo a named string -- for
 example, when constructing larger shell commands via command interpolation. The
 `ni` command is nothing more than a shortcut for the main script, so you can
 also use it to execute any `nameit` functionality.
 
-A couple of simple example:
+A couple of simple examples:
 
     nameit --add docs $HOME/my/favorite/docs
     nameit --add words /usr/share/dict/words
 
     j docs
-    grep ^aa `e words` > words_starting_with_aa
+    grep ^aa `ni words` > words_starting_with_aa
 
 Usage overview:
 
@@ -32,8 +32,8 @@ Usage overview:
     ni NAME                              # echo a named string
 
 The `nameit` utility will add paths in their normalized, absolute form and will
-handle common shell conventions (., .., and ~). Use the --literal option to
-bypass the default path normalization.
+handle common shell conventions (`.`, `..`, and `~`). Use the `--literal`
+option to bypass the default path normalization.
 
 Named paths are stored in `.nameitrc` in the user's home directory.
 
