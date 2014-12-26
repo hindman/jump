@@ -4,7 +4,11 @@ import sys
 import os.path as OP
 import json
 import argparse
+import subprocess
 from textwrap import dedent
+
+__version__ = '1.0'
+SCRIPT      = OP.basename(__file__)
 
 def usage():
     return dedent('''
@@ -26,8 +30,15 @@ def main(args):
     '''
     The function called when the script is executed in the normal way.
     '''
-    # Parse command line arguments.
+    # Parse command line arguments, exiting if option parsing failed.
     opts, code, msg = parse_options(args)
+    if opts and opts.install:
+        for cmd in msg:
+            if opts.dryrun:
+                print cmd
+            else:
+                subprocess.check_call(cmd, shell = True)
+        msg = 'Installed {}/{}'.format(opts.install, SCRIPT)
     if msg:
         exit(code, msg)
 
@@ -48,7 +59,7 @@ def process_paths(opts, paths):
     behavior for the script.
     '''
     # Initialze the 4 values that we will return, and define a lambda to get
-    # save-code-msg values when invalid keys are used.
+    # (save, code, msg) values when invalid names are given.
     paths, save, code, msg = (dict(paths), True, 0, None)
     missing = lambda k: (False, 1, u'Name not found: {}'.format(k))
 
@@ -75,10 +86,10 @@ def process_paths(opts, paths):
         if k in paths: msg = paths[k]
         else:          save, code, msg = missing(k)
 
-    # Get all named paths.
+    # Get all named paths, sorted by their paths.
     else:
         wid = max(map(len, paths))
-        kvs = paths.iteritems()
+        kvs = sorted(paths.items(), key = lambda t: t[1])
         fmt = u'{:<{}}   {}'.format
         msg = u'\n'.join(fmt(k, wid, v) for k, v in kvs)
         save = False
@@ -128,7 +139,7 @@ def parse_options(args):
     Takes a list of command-line arguments. Returns the parsed command-line
     options, along with a possible exit code and message.
     '''
-    # We will return this tuple.
+    # We will a tuple of these values.
     opts, code, msg = (None, None, None)
 
     # Define the option parser.
@@ -139,37 +150,56 @@ def parse_options(args):
     ap.add_argument('-m', '--mv', nargs = 2)
     ap.add_argument('-l', '--literal', action = 'store_true')
     ap.add_argument('-h', '--help', action = 'store_true')
+    ap.add_argument('--version', action = 'store_true')
+    ap.add_argument('--install')
+    ap.add_argument('--dryrun', action = 'store_true')
 
     # Return an error message if option parsing failed.
     try:
         opts = ap.parse_args(args)
     except Exception as e:
-        code = 1
-        msg = unicode(e).capitalize()
-        return (opts, 1, msg)
+        return (opts, 1, unicode(e))
 
-    # Return a usage message if user requested help.
+    # Return a usage or version message.
     if opts.help:
-        code = 0
-        msg = usage()
-        return (opts, code, msg)
+        return (opts, 0, usage())
+    if opts.version:
+        msg = '{} {}'.format(SCRIPT, __version__) 
+        return (opts, 0, msg)
 
     # Return an error message if the user requested conflicting actions.
     ks = 'name add rm mv'.split()
     ks = [k for k in ks if getattr(opts, k)]
     if len(ks) > 1:
-        code = 1
         msg = 'Conflicting arguments: {}'.format(', '.join(ks))
-        return (opts, code, msg)
+        return (opts, 1, msg)
+
+    # Return a list of installation commands as the message.
+    if opts.install:
+        msg = install_commands(opts)
+        return (opts, 0, msg)
 
     return (opts, code, msg)
+
+def install_commands(opts):
+    '''
+    Takes command line options and returns a list of commands to
+    install the script.
+    '''
+    d = opts.install.rstrip('/')
+    f = __file__
+    return [
+        "cp '{}' '{}'".format(__file__, d),
+        "chmod u+x '{}/{}'".format(d, SCRIPT),
+        "touch '{}'".format(named_paths_file()),
+    ]
 
 class ThrowingArgumentParser(argparse.ArgumentParser):
     '''
     A command-line option parsing class that will raise on failure.
     '''
     def error(self, message):
-        raise Exception(message)
+        raise Exception(message.capitalize())
 
 if __name__ == '__main__':
     main(sys.argv[1:])
