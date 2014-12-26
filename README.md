@@ -47,7 +47,7 @@ Add commands like the following to your Bash profile, adjusting the path to the
 
     # cd to a named path.
     function j {
-      [[ $# -eq "1" ]] && cd $($HOME/bin/nameit "$1")
+      [[ $# -eq "1" ]] && cd $($HOME/bin/nameit --cd "$1")
     }
 
     # echo a named string, or run any other nameit operations.

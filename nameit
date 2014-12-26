@@ -6,7 +6,7 @@ import json
 import argparse
 from textwrap import dedent
 
-__version__ = '1.0'
+__version__ = '1.1'
 
 def usage():
     return dedent(u'''
@@ -31,7 +31,7 @@ def main(args):
     # Parse command line arguments, exiting on failure.
     opts, code, msg = parse_options(args)
     if msg:
-        exit(code, msg)
+        exit(**exit_info(opts, code, msg))
 
     # Load up the existing named paths.
     npf = named_paths_file()
@@ -41,7 +41,7 @@ def main(args):
     paths, save, code, msg = process_paths(opts, paths)
     if save:
         save_named_paths(npf, paths)
-    exit(code, msg)
+    exit(**exit_info(opts, code, msg))
 
 def process_paths(opts, paths):
     '''
@@ -92,13 +92,25 @@ def process_paths(opts, paths):
     # Boom!
     return (paths, save, code, msg)
 
-def exit(code, msg = None):
+def exit(code = None, stdout = None, stderr = None):
     '''
     Helper to exit script.
     '''
-    if msg:
-        print msg
+    if stderr: sys.stderr.write(stderr + '\n')
+    if stdout: sys.stdout.write(stdout + '\n')
     sys.exit(code)
+
+def exit_info(opts, code, msg):
+    '''
+    Helper to convert (opts, code, msg) into a dict suitable for exit().
+    '''
+    if code:
+        stderr = msg
+        stdout = '.' if opts.cd else None
+    else:
+        stderr = None
+        stdout = msg
+    return dict(code = code, stdout = stdout, stderr = stderr)
 
 def named_paths_file():
     '''
@@ -144,6 +156,7 @@ def parse_options(args):
     ap.add_argument('-r', '--rm')
     ap.add_argument('-m', '--mv', nargs = 2)
     ap.add_argument('-l', '--literal', action = 'store_true')
+    ap.add_argument('--cd', action = 'store_true')
     ap.add_argument('-h', '--help', action = 'store_true')
     ap.add_argument('--version', action = 'store_true')
 

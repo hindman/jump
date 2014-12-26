@@ -7,6 +7,9 @@ process_paths = nameit.process_paths
 parse_options = nameit.parse_options
 os.remove('nameitc')
 
+class MockOpts(object):
+    pass
+
 class Nameit_TC(unittest.TestCase):
 
     def setUp(self):
@@ -31,6 +34,30 @@ class Nameit_TC(unittest.TestCase):
         for p in tests:
             ap = nameit.abspath(p)
             self.assertIsInstance(ap, str)
+
+    def test_exit_info(self):
+        '''
+        exit_info()
+        '''
+        opts = MockOpts()
+        opts.cd = False
+        # Success code.
+        code = 0
+        msg = 'hi'
+        ei = nameit.exit_info(opts, code, msg)
+        exp = dict(code = code, stderr = None, stdout = msg)
+        self.assertEqual(ei, exp)
+        # Fail code, in non-cd mode.
+        code = 1
+        ei = nameit.exit_info(opts, code, msg)
+        exp = dict(code = code, stderr = msg, stdout = None)
+        self.assertEqual(ei, exp)
+        # Fail code, in cd mode.
+        code = 1
+        opts.cd = True
+        ei = nameit.exit_info(opts, code, msg)
+        exp = dict(code = code, stderr = msg, stdout = '.')
+        self.assertEqual(ei, exp)
 
     def test_json_functions(self):
         '''
