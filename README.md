@@ -9,8 +9,8 @@ example, when constructing larger shell commands via command interpolation.
 
 A simple example:
 
-    nameit docs $HOME/my/favorite/docs
-    nameit words /usr/share/dict/words
+    nameit --add docs $HOME/my/favorite/docs
+    nameit --add words /usr/share/dict/words
 
     j docs
     grep ^aa `e words` > words_starting_with_aa
@@ -40,11 +40,14 @@ Named paths are stored in `.nameitrc` in the user's home directory.
 Download the `nameit` script to a directory in your `PATH` and make it
 executable. The script's only dependency is Python 2.7 or higher.
 
-Add the following commands to your Bash profile, adjusting the value assigned
-to `NAMEIT_SCRIPT` as needed:
+Add commands like the following to your Bash profile, adjusting the path to the
+`nameit` script as needed:
 
-    NAMEIT_SCRIPT="$HOME/bin/nameit"
+    function j {
+      cd $($HOME/bin/nameit "$1")
+    }
 
-    function j { cd $("$NAMEIT_SCRIPT" "$1") }
-    function e { "$NAMEIT_SCRIPT" "$1" }
+    function e {
+      $HOME/bin/nameit "$1"
+    }
 
