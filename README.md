@@ -44,12 +44,13 @@ Named paths are stored in `.nameitrc` in the user's home directory.
 ## Installation ##
 
 Download the `nameit` script to a directory in your PATH and make it
-executable.
+executable. The script's only dependency is Python 2.7 or higher.
 
 Add the following commands to your Bash profile (adjust the value assigned to
 `NAME_SCRIPT` as needed):
 
     NAME_SCRIPT="$HOME/bin/nameit"
+
     function j { cd $("$NAME_SCRIPT" "$1") }
     function e { "$NAME_SCRIPT" "$1" }
 

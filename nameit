@@ -4,11 +4,9 @@ import sys
 import os.path as OP
 import json
 import argparse
-import subprocess
 from textwrap import dedent
 
 __version__ = '1.0'
-SCRIPT      = OP.basename(__file__)
 
 def usage():
     return dedent('''
@@ -30,15 +28,8 @@ def main(args):
     '''
     The function called when the script is executed in the normal way.
     '''
-    # Parse command line arguments, exiting if option parsing failed.
+    # Parse command line arguments, exiting on failure.
     opts, code, msg = parse_options(args)
-    if opts and opts.install:
-        for cmd in msg:
-            if opts.dryrun:
-                print cmd
-            else:
-                subprocess.check_call(cmd, shell = True)
-        msg = 'Installed {}/{}'.format(opts.install, SCRIPT)
     if msg:
         exit(code, msg)
 
@@ -47,7 +38,7 @@ def main(args):
     paths = load_named_paths(npf)
 
     # Take action.
-    paths, code, msg, save = process_paths(opts, paths)
+    paths, save, code, msg = process_paths(opts, paths)
     if save:
         save_named_paths(npf, paths)
     exit(code, msg)
@@ -87,15 +78,18 @@ def process_paths(opts, paths):
         else:          save, code, msg = missing(k)
 
     # Get all named paths, sorted by their paths.
-    else:
+    elif paths:
         wid = max(map(len, paths))
         kvs = sorted(paths.items(), key = lambda t: t[1])
         fmt = u'{:<{}}   {}'.format
         msg = u'\n'.join(fmt(k, wid, v) for k, v in kvs)
         save = False
+    else:
+        msg = u'No names found.'
+        save = False
 
     # Boom!
-    return (paths, msg, code, save)
+    return (paths, save, code, msg)
 
 def exit(code, msg = None):
     '''
@@ -151,8 +145,6 @@ def parse_options(args):
     ap.add_argument('-l', '--literal', action = 'store_true')
     ap.add_argument('-h', '--help', action = 'store_true')
     ap.add_argument('--version', action = 'store_true')
-    ap.add_argument('--install')
-    ap.add_argument('--dryrun', action = 'store_true')
 
     # Return an error message if option parsing failed.
     try:
@@ -164,7 +156,7 @@ def parse_options(args):
     if opts.help:
         return (opts, 0, usage())
     if opts.version:
-        msg = '{} {}'.format(SCRIPT, __version__) 
+        msg = '{} {}'.format(OP.basename(__file__), __version__)
         return (opts, 0, msg)
 
     # Return an error message if the user requested conflicting actions.
@@ -174,25 +166,8 @@ def parse_options(args):
         msg = 'Conflicting arguments: {}'.format(', '.join(ks))
         return (opts, 1, msg)
 
-    # Return a list of installation commands as the message.
-    if opts.install:
-        msg = install_commands(opts)
-        return (opts, 0, msg)
-
+    # Normal return.
     return (opts, code, msg)
-
-def install_commands(opts):
-    '''
-    Takes command line options and returns a list of commands to
-    install the script.
-    '''
-    d = opts.install.rstrip('/')
-    f = __file__
-    return [
-        "cp '{}' '{}'".format(__file__, d),
-        "chmod u+x '{}/{}'".format(d, SCRIPT),
-        "touch '{}'".format(named_paths_file()),
-    ]
 
 class ThrowingArgumentParser(argparse.ArgumentParser):
     '''
