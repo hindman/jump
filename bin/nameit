@@ -1,0 +1,176 @@
+#! /usr/bin/env python
+
+import sys
+import os.path as OP
+import json
+import argparse
+from textwrap import dedent
+
+def usage():
+    return dedent('''
+        Usage:
+
+            nameit --add NAME STRING [--literal] # Add a named path or literal string
+            nameit --rm NAME                     # Delete a named string
+            nameit --mv OLD_NAME NEW_NAME        # Change name of a string
+
+            nameit NAME                          # Print a named string
+            nameit                               # List all named strings
+
+            nameit --help                        # Print help and exit
+
+            Options also have a single-letter variant.
+    ''').strip()
+
+def main(args):
+    '''
+    The function called when the script is executed in the normal way.
+    '''
+    # Parse command line arguments.
+    opts, code, msg = parse_options(args)
+    if msg:
+        exit(code, msg)
+
+    # Load up the existing named paths.
+    npf = named_paths_file()
+    paths = load_named_paths(npf)
+
+    # Take action.
+    paths, code, msg, save = process_paths(opts, paths)
+    if save:
+        save_named_paths(npf, paths)
+    exit(code, msg)
+
+def process_paths(opts, paths):
+    '''
+    Takes command-line options and a dict of named paths. Returns 4-tuple
+    containing a new dict of named paths, along with some values to govern exit
+    behavior for the script.
+    '''
+    # Initialze the 4 values that we will return, and define a lambda to get
+    # save-code-msg values when invalid keys are used.
+    paths, save, code, msg = (dict(paths), True, 0, None)
+    missing = lambda k: (False, 1, u'Name not found: {}'.format(k))
+
+    # Add a new path (or change existing one).
+    if opts.add:
+        k, v = opts.add
+        paths[k] = v if opts.literal else abspath(v)
+
+    # Delete a path.
+    elif opts.rm:
+        k = opts.rm
+        if k in paths: paths.pop(k)
+        else:          save, code, msg = missing(k)
+
+    # Rename a path.
+    elif opts.mv:
+        k1, k2 = opts.mv
+        if k1 in paths: paths[k2] = paths.pop(k1)
+        else:           save, code, msg = missing(k1)
+
+    # Get a path by its name.
+    elif opts.name:
+        k = opts.name
+        if k in paths: msg = paths[k]
+        else:          save, code, msg = missing(k)
+
+    # Get all named paths.
+    else:
+        wid = max(map(len, paths))
+        kvs = paths.iteritems()
+        fmt = u'{:<{}}   {}'.format
+        msg = u'\n'.join(fmt(k, wid, v) for k, v in kvs)
+        save = False
+
+    # Boom!
+    return (paths, msg, code, save)
+
+def exit(code, msg = None):
+    '''
+    Helper to exit script.
+    '''
+    if msg:
+        print msg
+    sys.exit(code)
+
+def named_paths_file():
+    '''
+    Returns the path to the user's named-paths JSON file.
+    '''
+    return OP.join(OP.expanduser('~'), '.nameitrc')
+
+def save_named_paths(f, paths):
+    '''
+    Write paths dict as a JSON file.
+    '''
+    with open(f, 'w') as fh:
+        json.dump(paths, fh, indent = 2)
+
+def load_named_paths(f):
+    '''
+    Returns the named-paths JSON data as a dict.
+    '''
+    if OP.isfile(f):
+        with open(f) as fh:
+            return json.load(fh)
+    else:
+        return {}
+
+def abspath(p):
+    '''
+    Takes a path and returns it in normalized, absolute form.
+    '''
+    return OP.abspath(OP.expanduser(p))
+
+def parse_options(args):
+    '''
+    Takes a list of command-line arguments. Returns the parsed command-line
+    options, along with a possible exit code and message.
+    '''
+    # We will return this tuple.
+    opts, code, msg = (None, None, None)
+
+    # Define the option parser.
+    ap = ThrowingArgumentParser(add_help = False)
+    ap.add_argument('name', nargs = '?')
+    ap.add_argument('-a', '--add', nargs = 2)
+    ap.add_argument('-r', '--rm')
+    ap.add_argument('-m', '--mv', nargs = 2)
+    ap.add_argument('-l', '--literal', action = 'store_true')
+    ap.add_argument('-h', '--help', action = 'store_true')
+
+    # Return an error message if option parsing failed.
+    try:
+        opts = ap.parse_args(args)
+    except Exception as e:
+        code = 1
+        msg = unicode(e).capitalize()
+        return (opts, 1, msg)
+
+    # Return a usage message if user requested help.
+    if opts.help:
+        code = 0
+        msg = usage()
+        return (opts, code, msg)
+
+    # Return an error message if the user requested conflicting actions.
+    ks = 'name add rm mv'.split()
+    ks = [k for k in ks if getattr(opts, k)]
+    if len(ks) > 1:
+        code = 1
+        msg = 'Conflicting arguments: {}'.format(', '.join(ks))
+        return (opts, code, msg)
+
+    return (opts, code, msg)
+
+class ThrowingArgumentParser(argparse.ArgumentParser):
+    '''
+    A command-line option parsing class that will raise on failure.
+    '''
+    def error(self, message):
+        raise Exception(message)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
+
