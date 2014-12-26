@@ -9,7 +9,7 @@ from textwrap import dedent
 __version__ = '1.0'
 
 def usage():
-    return dedent('''
+    return dedent(u'''
         Usage:
 
             nameit --add NAME STRING [--literal] # Add a named path or literal string
@@ -73,20 +73,21 @@ def process_paths(opts, paths):
 
     # Get a path by its name.
     elif opts.name:
+        save = False
         k = opts.name
         if k in paths: msg = paths[k]
         else:          save, code, msg = missing(k)
 
     # Get all named paths, sorted by their paths.
     elif paths:
+        save = False
         wid = max(map(len, paths))
         kvs = sorted(paths.items(), key = lambda t: t[1])
         fmt = u'{:<{}}   {}'.format
         msg = u'\n'.join(fmt(k, wid, v) for k, v in kvs)
-        save = False
     else:
-        msg = u'No names found.'
         save = False
+        msg = u'No names found.'
 
     # Boom!
     return (paths, save, code, msg)
