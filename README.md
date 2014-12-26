@@ -3,11 +3,13 @@
 The `nameit` utility can be used to assign convenient names to frequently used
 strings, typically paths.
 
-The related `j` and `e` shell commands can then be used to cd to a named path
-(`j` for jump) or to echo a named string. The latter would be used, for
-example, when constructing larger shell commands via command interpolation.
+The related `j` shell command can then be used to cd to a named path (`j` for
+jump). The `ni` shell command can be used to echo a named string -- for
+example, when constructing larger shell commands via command interpolation. The
+`ni` command is nothing more than a shortcut for the main script, so you can
+also use it to execute any `nameit` functionality.
 
-A simple example:
+A couple of simple example:
 
     nameit --add docs $HOME/my/favorite/docs
     nameit --add words /usr/share/dict/words
@@ -27,7 +29,7 @@ Usage overview:
     nameit --help                        # Print help and exit
 
     j NAME                               # cd to a named path
-    e NAME                               # echo a named string
+    ni NAME                              # echo a named string
 
 The `nameit` utility will add paths in their normalized, absolute form and will
 handle common shell conventions (., .., and ~). Use the --literal option to
@@ -43,11 +45,13 @@ executable. The script's only dependency is Python 2.7 or higher.
 Add commands like the following to your Bash profile, adjusting the path to the
 `nameit` script as needed:
 
+    # cd to a named path.
     function j {
-      cd $($HOME/bin/nameit "$1")
+      [[ $# -eq "1" ]] && cd $($HOME/bin/nameit "$1")
     }
 
-    function e {
-      $HOME/bin/nameit "$1"
+    # echo a named string, or run any other nameit operations.
+    function ni {
+      $HOME/bin/nameit "$@"
     }
 
