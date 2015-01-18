@@ -2,16 +2,24 @@
 
 The `jump` utility can be used to assign convenient names to frequently used
 strings, typically directory paths. The related `j` shell command can then be
-used to `cd` to a named path.
+used to `cd` to a named path. In combination, these utilities make it very easy
+to jump from one place to another on the command line.
 
-A couple of simple examples:
+A few simple examples:
 
+    # Name a few paths.
     jump --add docs $HOME/my/favorite/docs
+    jump --add mp3s $HOME/my/music/from/70s/80s/90s/and/today
     jump --add words /usr/share/dict/words
 
+    # Go to docs directory and do some work. If desired, jump can
+    # be used in command-interpolation, as shown in the grep example.
     j docs
     grep ^aa `jump words` > words_starting_with_aa
 
+    # Easily cd somewhere else.
+    j mps
+    
 Usage overview:
 
     jump --add NAME STRING [--literal]   # Add a named path or literal string
