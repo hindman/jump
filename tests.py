@@ -2,15 +2,15 @@ import unittest
 import imp
 import os
 
-nameit        = imp.load_source('nameit', 'nameit')
-process_paths = nameit.process_paths
-parse_options = nameit.parse_options
-os.remove('nameitc')
+jump = imp.load_source('jump', 'jump')
+process_paths = jump.process_paths
+parse_options = jump.parse_options
+os.remove('jumpc')
 
 class MockOpts(object):
     pass
 
-class Nameit_TC(unittest.TestCase):
+class Jump_TC(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -19,7 +19,7 @@ class Nameit_TC(unittest.TestCase):
         '''
         named_paths_file(): can exercise
         '''
-        npf = nameit.named_paths_file()
+        npf = jump.named_paths_file()
         self.assertIsInstance(npf, str)
 
     def test_abspath(self):
@@ -32,7 +32,7 @@ class Nameit_TC(unittest.TestCase):
             '~/foo/bar',
         ]
         for p in tests:
-            ap = nameit.abspath(p)
+            ap = jump.abspath(p)
             self.assertIsInstance(ap, str)
 
     def test_exit_info(self):
@@ -44,18 +44,18 @@ class Nameit_TC(unittest.TestCase):
         # Success code.
         code = 0
         msg = 'hi'
-        ei = nameit.exit_info(opts, code, msg)
+        ei = jump.exit_info(opts, code, msg)
         exp = dict(code = code, stderr = None, stdout = msg)
         self.assertEqual(ei, exp)
         # Fail code, in non-cd mode.
         code = 1
-        ei = nameit.exit_info(opts, code, msg)
+        ei = jump.exit_info(opts, code, msg)
         exp = dict(code = code, stderr = msg, stdout = None)
         self.assertEqual(ei, exp)
         # Fail code, in cd mode.
         code = 1
         opts.cd = True
-        ei = nameit.exit_info(opts, code, msg)
+        ei = jump.exit_info(opts, code, msg)
         exp = dict(code = code, stderr = msg, stdout = '.')
         self.assertEqual(ei, exp)
 
@@ -64,7 +64,7 @@ class Nameit_TC(unittest.TestCase):
         JSON functions
         '''
         # Setup some named path info.
-        f = 'tmp/nameit_test.json'
+        f = 'tmp/jump_test.json'
         d1 = dict(
             foo = '/foo/bar/blah',
             blort = '/tmp/blort',
@@ -75,10 +75,10 @@ class Nameit_TC(unittest.TestCase):
             os.remove(f)
         self.assertFalse(OP.isfile(f))
         # Save the named paths.
-        nameit.save_named_paths(f, d1)
+        jump.save_named_paths(f, d1)
         self.assertTrue(OP.isfile(f))
         # Load them and make sure they equal the original.
-        d2 = nameit.load_named_paths(f)
+        d2 = jump.load_named_paths(f)
         self.assertEqual(d1, d2)
         # Clean up.
         os.remove(f)
@@ -98,13 +98,13 @@ class Nameit_TC(unittest.TestCase):
         args = '--help --add a b'.split()
         opts, code, msg = parse_options(args)
         self.assertFalse(code)
-        self.assertEqual(msg, nameit.usage())
+        self.assertEqual(msg, jump.usage())
 
         # Version.
         args = '--version --add q r'.split()
         opts, code, msg = parse_options(args)
         self.assertFalse(code)
-        self.assertIn(nameit.__version__, msg)
+        self.assertIn(jump.__version__, msg)
 
         # Conflicting options.
         tests = [

@@ -6,22 +6,22 @@ import json
 import argparse
 from textwrap import dedent
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 def usage():
     return dedent(u'''
         Usage:
 
-            nameit --add NAME STRING [--literal] # Add a named path or literal string
-            nameit --rm NAME                     # Delete a named string
-            nameit --mv OLD_NAME NEW_NAME        # Change name of a string
+            jump --add NAME STRING [--literal] # Add a named path or literal string
+            jump --rm NAME                     # Delete a named string
+            jump --mv OLD_NAME NEW_NAME        # Change name of a string
 
-            nameit NAME                          # Print a named string
-            nameit                               # List all named strings
+            jump NAME                          # Print a named string
+            jump                               # List all named strings
 
-            nameit --help                        # Print help and exit
+            jump --help                        # Print help and exit
 
-            Options also have a single-letter variant.
+            Options also have single-letter variants.
     ''').strip()
 
 def main(args):
@@ -106,7 +106,7 @@ def exit_info(opts, code, msg):
     '''
     if code:
         stderr = msg
-        stdout = '.' if opts.cd else None
+        stdout = '.' if (opts and opts.cd) else None
     else:
         stderr = None
         stdout = msg
@@ -116,7 +116,7 @@ def named_paths_file():
     '''
     Returns the path to the user's named-paths JSON file.
     '''
-    return OP.join(OP.expanduser('~'), '.nameitrc')
+    return OP.join(OP.expanduser('~'), '.jumprc')
 
 def save_named_paths(f, paths):
     '''
