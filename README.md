@@ -43,13 +43,19 @@ Named paths are stored in `.jumprc` in the user's home directory.
 ## Installation ##
 
 Download the `jump` script to a directory in your `PATH` and make it
-executable. The script's only dependency is Python 2.7 or higher.
+executable. For example:
 
-Add commands like the following to your Bash profile, adjusting the path to the
-`jump` script as needed:
+    # Modify the path to the jump script as desired.
+    URL='https://raw.githubusercontent.com/hindman/jump/master/jump'
+    curl "$URL" -o $HOME/bin/jump
+    chmod u+x $HOME/bin/jump
+
+Add commands like the following to your Bash profile:
 
     # cd to a named path.
     function j {
       [[ $# -eq "1" ]] && cd $($HOME/bin/jump --cd "$1")
     }
+
+The script's only dependency is Python 2.7 or higher.
 
