@@ -18,7 +18,7 @@ A few simple examples:
     grep ^aa `jump words` > words_starting_with_aa
 
     # Easily cd somewhere else.
-    j mps
+    j mp3s
     
 Usage overview:
 
