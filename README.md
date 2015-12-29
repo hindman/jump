@@ -50,11 +50,11 @@ executable. For example:
     curl "$URL" -o $HOME/bin/jump
     chmod u+x $HOME/bin/jump
 
-Add commands like the following to your Bash profile:
+Add a command like this to your Bash profile:
 
     # cd to a named path.
     function j {
-      [[ $# -eq "1" ]] && cd $($HOME/bin/jump --cd "$1")
+      [[ $# -eq "1" ]] && cd "$($HOME/bin/jump --cd "$1")"
     }
 
 The script's only dependency is Python 2.7 or higher.
