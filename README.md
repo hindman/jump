@@ -42,6 +42,8 @@ Named paths are stored in `.jumprc` in the user's home directory.
 
 ## Installation ##
 
+The script's only dependency is Python 2.7 or higher.
+
 Download the `jump` script to a directory in your `PATH` and make it
 executable. For example:
 
@@ -50,12 +52,25 @@ executable. For example:
     curl "$URL" -o $HOME/bin/jump
     chmod u+x $HOME/bin/jump
 
-Add a command like this to your Bash profile:
+Add a function like this to your Bash profile:
 
     # cd to a named path.
-    function j {
-      [[ $# -eq "1" ]] && cd "$($HOME/bin/jump --cd "$1")"
+    j() {
+        [[ $# -eq "1" ]] && cd "$($HOME/bin/jump --cd "$1")"
     }
 
-The script's only dependency is Python 2.7 or higher.
+For command-completion, also add this:
+
+    _jcomplete() {
+        # Use `jump` to write matching completions to a temp file,
+        # one completion-entry per line.
+        local curr_word=${COMP_WORDS[COMP_CWORD]}
+        local tmp_file="$(mktemp /tmp/jump-completions.XXXXXX)"
+        jump --complete "$curr_word" >| "$tmp_file"
+        # Load that temp file into the COMPREPLY array, and clean up.
+        IFS=$'\n' read -d '' -r -a COMPREPLY < "$tmp_file"
+        rm -f "$tmp_file"
+    }
+
+    complete -F _jcomplete j
 

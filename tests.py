@@ -2,13 +2,16 @@ import unittest
 import imp
 import os
 
+
 jump = imp.load_source('jump', 'jump')
 process_paths = jump.process_paths
 parse_options = jump.parse_options
 os.remove('jumpc')
 
+
 class MockOpts(object):
     pass
+
 
 class Jump_TC(unittest.TestCase):
 

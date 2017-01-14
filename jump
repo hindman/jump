@@ -1,12 +1,15 @@
 #! /usr/bin/env python
 
-import sys
-import os.path as OP
-import json
-import argparse
 from textwrap import dedent
+import argparse
+import json
+import os.path as OP
+import re
+import sys
 
-__version__ = '1.2'
+
+__version__ = '1.3'
+
 
 def usage():
     return dedent(u'''
@@ -18,11 +21,13 @@ def usage():
 
             jump NAME                          # Print a named string
             jump                               # List all named strings
+            jump --complete PREFIX             # Print all NAME values matching PREFIX
 
             jump --help                        # Print help and exit
 
             Options also have single-letter variants.
     ''').strip()
+
 
 def main(args):
     '''
@@ -42,6 +47,7 @@ def main(args):
     if save:
         save_named_paths(npf, paths)
     exit(**exit_info(opts, code, msg))
+
 
 def process_paths(opts, paths):
     '''
@@ -78,19 +84,34 @@ def process_paths(opts, paths):
         if k in paths: msg = paths[k]
         else:          save, code, msg = missing(k)
 
+    # Get all matching a prefix.
+    elif opts.complete is not None:
+        save = False
+        prefix = opts.complete.lower()
+        ks = [k for k in paths if k.lower().startswith(prefix)]
+        fmt = '{}:{}'
+        msg = '\n'.join(fmt.format(k, paths[k]) for k in ks)
+
     # Get all named paths, sorted by their paths.
+    # Optionally, filter that data by a regex.
     elif paths:
         save = False
         wid = max(map(len, paths))
         kvs = sorted(paths.items(), key = lambda t: t[1])
+        if opts.search:
+            rgx = re.compile(opts.search, re.IGNORECASE)
+            kvs = [(k, v) for k, v in kvs if rgx.search(k) or rgx.search(v)]
         fmt = u'{:<{}}   {}'.format
         msg = u'\n'.join(fmt(k, wid, v) for k, v in kvs)
+
+    # Nothing found.
     else:
         save = False
         msg = u'No names found.'
 
     # Boom!
     return (paths, save, code, msg)
+
 
 def exit(code = None, stdout = None, stderr = None):
     '''
@@ -99,6 +120,7 @@ def exit(code = None, stdout = None, stderr = None):
     if stderr: sys.stderr.write(stderr + '\n')
     if stdout: sys.stdout.write(stdout + '\n')
     sys.exit(code)
+
 
 def exit_info(opts, code, msg):
     '''
@@ -112,11 +134,13 @@ def exit_info(opts, code, msg):
         stdout = msg
     return dict(code = code, stdout = stdout, stderr = stderr)
 
+
 def named_paths_file():
     '''
     Returns the path to the user's named-paths JSON file.
     '''
     return OP.join(OP.expanduser('~'), '.jumprc')
+
 
 def save_named_paths(f, paths):
     '''
@@ -124,6 +148,7 @@ def save_named_paths(f, paths):
     '''
     with open(f, 'w') as fh:
         json.dump(paths, fh, indent = 2)
+
 
 def load_named_paths(f):
     '''
@@ -135,11 +160,13 @@ def load_named_paths(f):
     else:
         return {}
 
+
 def abspath(p):
     '''
     Takes a path and returns it in normalized, absolute form.
     '''
     return OP.abspath(OP.expanduser(p))
+
 
 def parse_options(args):
     '''
@@ -157,6 +184,8 @@ def parse_options(args):
     ap.add_argument('-m', '--mv', nargs = 2)
     ap.add_argument('-l', '--literal', action = 'store_true')
     ap.add_argument('--cd', action = 'store_true')
+    ap.add_argument('--complete')
+    ap.add_argument('--search')
     ap.add_argument('-h', '--help', action = 'store_true')
     ap.add_argument('--version', action = 'store_true')
 
@@ -187,8 +216,10 @@ class ThrowingArgumentParser(argparse.ArgumentParser):
     '''
     A command-line option parsing class that will raise on failure.
     '''
+
     def error(self, message):
         raise Exception(message.capitalize())
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])
