@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from __future__ import print_function, unicode_literals
+
 from textwrap import dedent
 import argparse
 import json
@@ -12,7 +14,7 @@ __version__ = '1.3'
 
 
 def usage():
-    return dedent(u'''
+    return dedent('''
         Usage:
 
             jump --add NAME STRING [--literal] # Add a named path or literal string
@@ -58,7 +60,7 @@ def process_paths(opts, paths):
     # Initialze the 4 values that we will return, and define a lambda to get
     # (save, code, msg) values when invalid names are given.
     paths, save, code, msg = (dict(paths), True, 0, None)
-    missing = lambda k: (False, 1, u'Name not found: {}'.format(k))
+    missing = lambda k: (False, 1, 'Name not found: {}'.format(k))
 
     # Add a new path (or change existing one).
     if opts.add:
@@ -101,13 +103,13 @@ def process_paths(opts, paths):
         if opts.search:
             rgx = re.compile(opts.search, re.IGNORECASE)
             kvs = [(k, v) for k, v in kvs if rgx.search(k) or rgx.search(v)]
-        fmt = u'{:<{}}   {}'.format
-        msg = u'\n'.join(fmt(k, wid, v) for k, v in kvs)
+        fmt = '{:<{}}   {}'.format
+        msg = '\n'.join(fmt(k, wid, v) for k, v in kvs)
 
     # Nothing found.
     else:
         save = False
-        msg = u'No names found.'
+        msg = 'No names found.'
 
     # Boom!
     return (paths, save, code, msg)
@@ -193,7 +195,7 @@ def parse_options(args):
     try:
         opts = ap.parse_args(args)
     except Exception as e:
-        return (opts, 1, unicode(e))
+        return (opts, 1, str(e))
 
     # Return a usage or version message.
     if opts.help:
