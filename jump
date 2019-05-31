@@ -48,7 +48,8 @@ def main(args):
     paths, save, code, msg = process_paths(opts, paths)
     if save:
         save_named_paths(npf, paths)
-    exit(**exit_info(opts, code, msg))
+    d = exit_info(opts, code, msg)
+    exit(**d)
 
 
 def process_paths(opts, paths):
@@ -210,6 +211,11 @@ def parse_options(args):
     if len(ks) > 1:
         msg = 'Conflicting arguments: {}'.format(', '.join(ks))
         return (opts, 1, msg)
+
+    # If the name is a single autocomplete result (eg `vols:/Volumes`),
+    # remove the stuff after the colon.
+    if opts.name and ':' in opts.name:
+        opts.name = opts.name.split(':', 1)[0]
 
     # Normal return.
     return (opts, code, msg)
